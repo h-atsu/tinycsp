@@ -1,0 +1,29 @@
+[project]
+name = "tinycsp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "atsuhiro", email = "jhuim08@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+tinycsp = "tinycsp:main"
+
+[tool.maturin]
+module-name = "tinycsp._core"
+python-packages = ["tinycsp"]
+python-source = "python"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.1.0",
+    "ruff>=0.14.14",
+    "ty>=0.0.14",
+]
