@@ -2,7 +2,7 @@ from collections.abc import Callable
 from copy import deepcopy
 from typing import TypeAlias
 
-from tinycsp.constraint import Constraint, NotEqualConstraint
+from tinycsp.constraint import Constraint, EqualConstraint, NotEqualConstraint
 from tinycsp.domain import Domain
 from tinycsp.exceptions import Inconsistency
 from tinycsp.variable import Variable
@@ -24,6 +24,16 @@ class TinyCSP:
 
     def not_equal(self, x: Variable, y: Variable, offset: int = 0) -> None:
         self.constraints.append(NotEqualConstraint(x, y, offset))
+
+    def equal(self, x: Variable, value: int) -> None:
+        self.constraints.append(EqualConstraint(x, value))
+
+    def all_different(self, vars: list[Variable]) -> None:
+        # Note: this is a naive implementation with O(n^2) constraints.
+        n = len(vars)
+        for i in range(n):
+            for j in range(i + 1, n):
+                self.not_equal(vars[i], vars[j])
 
     def fix_point(self) -> None:
         while True:
