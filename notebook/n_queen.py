@@ -6,15 +6,12 @@ from tinycsp import TinyCSP
 # %%
 n = 8
 csp = TinyCSP()
-q = []
+q = [csp.make_variable(n) for _ in range(n)]
 
-for i in range(n):
-    q.append(csp.make_variable(n))
-
+csp.all_different(q)
 
 for i in range(n):
     for j in range(i + 1, n):
-        csp.not_equal(q[i], q[j])
         csp.not_equal(q[i], q[j], j - i)
         csp.not_equal(q[i], q[j], i - j)
 
