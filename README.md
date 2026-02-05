@@ -6,20 +6,19 @@ Reference materials:
 - https://github.com/minicp/minicp/tree/mooc/src/main/java/minicp
 - http://www.minicp.org/
 
-This repository currently ships a pure‑Python implementation and is set up to migrate the core search engine to Rust for speed using `maturin` + `pyo3`.
-
 ## Status
 
-- Python implementation: available now (`python/tinycsp`).
-- Rust core: scaffolded (`src/lib.rs`), migration planned.
+- Python backend: available now (`python/tinycsp`).
+- Rust backend: available via `_core` extension (`src` + `maturin`), selectable at runtime.
 - API surface: small and intentionally simple.
 
-## Features (current)
+## Features
 
 - Finite‑domain integer variables (`Domain`, `Variable`).
-- Not‑equal constraint with optional offset.
+- Constraints: `not_equal`, `equal`, and `all_different` (pairwise decomposition).
 - Simple fix‑point propagation.
 - Depth‑first search with domain backup/restore.
+- Two backends for DFS: pure Python or Rust.
 
 ## Installation (dev)
 
@@ -47,17 +46,56 @@ csp.dfs(lambda sol: solutions.append(sol))
 print(solutions)
 ```
 
+## Notebook Examples
+
+Example notebooks live in `notebook/` (they are plain `.py` notebooks runnable with Python).
+
+- `notebook/graph_cloring.py`: Japan prefecture graph coloring using GeoJSON + TinyCSP.
+- `notebook/n_queen.py`: N‑Queens (uses `all_different` + diagonals) and can run with the Rust backend.
+- `notebook/sudoku.py`: Sudoku solver with row/column/block constraints.
+
+You can run them like:
+
+```bash
+python notebook/n_queen.py
+```
+
+## API Overview (TinyCSP)
+
+Core methods (from `python/tinycsp/tinycsp.py`):
+
+- `make_variable(n: int) -> Variable`:
+  Creates a variable with domain `{0, 1, ..., n-1}`.
+- `not_equal(x: Variable, y: Variable, offset: int = 0) -> None`:
+  Adds `x != y + offset`.
+- `equal(x: Variable, value: int) -> None`:
+  Fixes `x == value`.
+- `all_different(vars: list[Variable]) -> None`:
+  Naive pairwise expansion into `not_equal` constraints.
+- `dfs(on_solution, stop_after_first: bool = False, backend: "python"|"rust" = "python") -> bool`:
+  Depth‑first search. `on_solution` receives a `tuple[int, ...]` in variable creation order.
+  If `on_solution` returns `False`, search stops early.
+
+## Backend Selection (Python vs Rust)
+
+TinyCSP lets you choose the DFS backend per call:
+
+```python
+csp.dfs(on_solution, backend="python")
+csp.dfs(on_solution, backend="rust")
+```
+
+- Default is `backend="python"`.
+- Rust backend requires the `_core` extension built via `maturin develop`.
+- Constraints supported by Rust backend mirror the Python ones (`equal`, `not_equal`, and `all_different` via decomposition).
+
 ## Project Layout
 
 - `python/tinycsp`: Python implementation and public API.
 - `src`: Rust extension module (via `pyo3`).
+- `notebook`: Example notebooks / scripts.
 - `pyproject.toml`: `maturin` build config and package metadata.
 
-## Roadmap
-
-- Port core search and propagation to Rust.
-- Expand constraint set (e.g., `all_different`, linear constraints).
-- Add examples and benchmarks.
 
 ## Acknowledgements
 
