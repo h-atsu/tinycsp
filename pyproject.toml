@@ -23,7 +23,11 @@ build-backend = "maturin"
 
 [dependency-groups]
 dev = [
+    "geopandas>=1.1.2",
     "ipykernel>=7.1.0",
+    "japanmap>=0.6.0",
+    "matplotlib>=3.10.8",
+    "pandas>=3.0.0",
     "ruff>=0.14.14",
     "ty>=0.0.14",
 ]

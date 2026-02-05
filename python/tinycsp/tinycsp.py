@@ -8,7 +8,8 @@ from tinycsp.exceptions import Inconsistency
 from tinycsp.variable import Variable
 
 Solution = tuple[int, ...]
-OnSolutionCallback: TypeAlias = Callable[[Solution], None]
+# Return False to stop search early; return None/True to continue.
+OnSolutionCallback: TypeAlias = Callable[[Solution], bool | None]
 
 
 class TinyCSP:
@@ -53,7 +54,7 @@ class TinyCSP:
     def first_not_fixed(self) -> Variable | None:
         return next((var for var in self.variables if not var.dom.is_fixed()), None)
 
-    def dfs(self, on_solution: OnSolutionCallback) -> None:
+    def dfs(self, on_solution: OnSolutionCallback, *, stop_after_first: bool = False) -> bool:
         self.n_recur += 1
 
         not_fixed_var = self.first_not_fixed()
@@ -61,7 +62,11 @@ class TinyCSP:
         if not_fixed_var is None:
             # solution found
             solution = tuple(var.dom.min() for var in self.variables)
-            on_solution(solution)
+            should_continue = on_solution(solution)
+            if stop_after_first:
+                return False
+            if should_continue is False:
+                return False
 
         else:
             val = not_fixed_var.dom.min()
@@ -71,7 +76,9 @@ class TinyCSP:
             try:
                 not_fixed_var.dom.fix(val)
                 self.fix_point()
-                self.dfs(on_solution)
+                if not self.dfs(on_solution, stop_after_first=stop_after_first):
+                    self.restore_domains(backup)
+                    return False
             except Inconsistency:
                 pass
 
@@ -81,8 +88,10 @@ class TinyCSP:
             try:
                 not_fixed_var.dom.remove(val)
                 self.fix_point()
-                self.dfs(on_solution)
+                if not self.dfs(on_solution, stop_after_first=stop_after_first):
+                    self.restore_domains(backup)
+                    return False
             except Inconsistency:
                 pass
 
-        return
+        return True
